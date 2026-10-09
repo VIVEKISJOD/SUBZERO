@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { site } from "./site";
 import { Link, usePath } from "./router";
 import Home from "./Home";
+import Backdrop, { boostSnow } from "./Backdrop";
 import { About, Animations, Contact, ProjectPage } from "./Pages";
 
 const NAV = [
@@ -80,6 +81,8 @@ export default function App() {
   // every page change starts at the top
   useEffect(() => {
     window.scrollTo(0, 0);
+    // opening an animation: the snow rushes for a moment, like something loading
+    if (/^\/animations\/[^/]+/.test(path)) boostSnow(1800);
   }, [path]);
 
   let page;
@@ -102,6 +105,7 @@ export default function App() {
 
   return (
     <>
+      <Backdrop />
       <a className="skip" href="#main" onClick={(e) => { e.preventDefault(); document.getElementById("main")?.focus(); }}>
         Skip to content
       </a>

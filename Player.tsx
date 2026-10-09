@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Project } from "./projects";
 import { assetUrl, isYouTube, youTubeEmbed } from "./lib";
+import { snowHold } from "./Backdrop";
 
 /**
  * The complete-story viewer. Only mounted after the visitor clicks
@@ -13,6 +14,42 @@ export default function Player({ project, onClose }: { project: Project; onClose
   const [failed, setFailed] = useState(false);
   const hasVideo = !!project.fullVideo;
   const youtube = hasVideo && isYouTube(project.fullVideo);
+  const [ready, setReady] = useState(!hasVideo);
+  const finishRef = useRef<() => void>(() => {});
+
+  // While the film loads the snow falls fast; it settles once the film can play.
+  useEffect(() => {
+    const t0 = performance.now();
+    const release = snowHold();
+    let timer = 0;
+    finishRef.current = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(release, Math.max(0, 1500 - (performance.now() - t0)));
+    };
+    if (!hasVideo) finishRef.current();
+    return () => {
+      window.clearTimeout(timer);
+      release();
+    };
+  }, [hasVideo]);
+
+  // While the film loads, the rushing snow is drawn in front of the player
+  // (it stays for at least 1.5 s so the visitor sees it, then drops behind).
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.add("player-loading");
+    if (!ready) return () => root.classList.remove("player-loading");
+    const id = window.setTimeout(() => root.classList.remove("player-loading"), 1500);
+    return () => {
+      window.clearTimeout(id);
+      root.classList.remove("player-loading");
+    };
+  }, [ready]);
+
+  const markReady = useCallback(() => {
+    setReady(true);
+    finishRef.current();
+  }, []);
 
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
@@ -60,7 +97,7 @@ export default function Player({ project, onClose }: { project: Project; onClose
     >
       <div className="player__bar">
         <p className="player__title">
-          <span className="eyebrow">Complete story</span>
+          <span className="eyebrow">{ready ? "Complete story" : "Loading…"}</span>
           {project.title}
         </p>
         <button ref={closeRef} className="btn btn--secondary player__close" onClick={onClose}>
@@ -88,6 +125,7 @@ export default function Player({ project, onClose }: { project: Project; onClose
             title={`${project.title} — complete story`}
             allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
             allowFullScreen
+            onLoad={markReady}
           />
         ) : (
           <video
@@ -97,7 +135,11 @@ export default function Player({ project, onClose }: { project: Project; onClose
             autoPlay
             playsInline
             preload="auto"
-            onError={() => setFailed(true)}
+            onCanPlay={markReady}
+            onError={() => {
+              setFailed(true);
+              markReady();
+            }}
           >
             Your browser can't play this video.
           </video>
