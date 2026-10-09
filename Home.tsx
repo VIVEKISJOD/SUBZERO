@@ -112,7 +112,9 @@ function Story() {
 /* ───────── Scene C — the 3D ring ───────── */
 function Collection() {
   const phone = useMediaQuery("(max-width: 640px)");
+  const tablet = useMediaQuery("(max-width: 1000px)");
   const items = projects.map((p) => ({ src: p.thumbnail, title: p.title, href: `#/animations/${p.slug}` }));
+  const size = phone ? 170 : tablet ? 230 : 300;
   return (
     <section className="collection">
       <div className="section-head">
@@ -123,28 +125,22 @@ function Collection() {
           Pick a world.
         </Reveal>
         <Reveal as="p" className="muted">
-          {phone ? "Swipe sideways, tap to open." : "Drag to turn the ring. Click a frame to open it."}
+          {phone ? "Swipe the ring sideways, tap a frame to open it." : "Drag to turn the ring. Click a frame to open it."}
         </Reveal>
       </div>
 
-      {phone ? (
-        <ul className="strip" aria-label="Animations">
-          {projects.map((p) => (
-            <li key={p.slug}>
-              <Link to={`/animations/${p.slug}`} aria-label={`Open ${p.title}`}>
-                <div className="frame frame--square">
-                  <Picture file={p.thumbnail} alt={p.title} kind="Thumbnail" />
-                </div>
-                <span className="strip__title">{p.title}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <div className="ring-stage">
-          <RoundCarousel items={items} imageWidth={300} imageHeight={300} tilt={-7} speed={4} spacing={3.5} cornerRadius={14} />
-        </div>
-      )}
+      <div className="ring-stage">
+        <RoundCarousel
+          items={items}
+          imageWidth={size}
+          imageHeight={size}
+          tilt={-7}
+          speed={4}
+          spacing={3.5}
+          cornerRadius={14}
+          perspective={phone ? 1800 : 3000}
+        />
+      </div>
     </section>
   );
 }

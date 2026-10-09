@@ -4,7 +4,7 @@
  * (empty) to hide it; nothing fake is ever shown.
  */
 export const site = {
-  studioName: "Studio Name", // <- replace with your studio / channel name
+  studioName: "SUBZERO", // your studio name
   tagline: "AI-crafted animated worlds",
   description:
     "A cinematic portfolio of AI-crafted animated worlds. Watch a glimpse, then press play for the complete story.",
